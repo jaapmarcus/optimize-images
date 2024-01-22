@@ -3,7 +3,7 @@
 Plugin Name:Optimize Images
 Plugin URI: https://eris.nu
 Description:
-Version: 1.0.0
+Version: 1.1.0
 Author: Jaap Marcus
 Author URI:  https://eris.nu
 Text Domain: -
@@ -69,9 +69,23 @@ class OptimizeImages {
 		
 	}	
 }
+
+function alterImageSRC($image, $attachment_id, $size, $icon)
+{        
+		$upload_dir = wp_upload_dir();
+		$base_dir = $upload_dir['basedir'];
+		$base_url = $upload_dir['baseurl'];
+		$imagepath= str_replace($base_url, $base_dir, $image[0].'.webp');
+		if ( file_exists( $imagepath) ){
+			$image[0] = $image[0].'.webp';
+		}
+		return $image;
+}
+add_filter('wp_get_attachment_image_src', 'alterImageSRC', 10, 4);
+
+
 $class = new OptimizeImages();
 
 if (defined('WP_CLI') && WP_CLI) {
 		include(__DIR__.'/wp-cli.php');
 }
-?>
