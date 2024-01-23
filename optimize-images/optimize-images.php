@@ -3,7 +3,7 @@
 Plugin Name:Optimize Images
 Plugin URI: https://eris.nu
 Description:
-Version: 1.1.0
+Version: 1.2.0
 Author: Jaap Marcus
 Author URI:  https://eris.nu
 Text Domain: -
@@ -13,6 +13,59 @@ class OptimizeImages {
 	public function __construct(){
 		// Action to delete a webp image when original image is deleted
 		add_action('delete_attachment', array($this, 'delete_webp_image'));
+		add_action('publish_post', array($this, 'scan_post'),  10, 3 );
+		add_filter('wp_get_attachment_image_src',  array($this,'alterImageSrc'), 10, 4);
+		add_filter('wp_calculate_image_srcset',array($this,'setImageSrcSet'));
+	}
+	
+	function setImageSrcSet($sources){
+		$sr = array();
+		foreach($sources as $source) 
+		{       
+				$upload_dir = wp_upload_dir();
+				$base_dir = $upload_dir['basedir'];
+				$base_url = $upload_dir['baseurl'];
+				$imagepath= str_replace($base_url, $base_dir, $source['url'].'.webp');
+				if ( file_exists( $imagepath) ){
+					$source['url'] = $source['url'].'.webp';
+					$sr[] = $source;
+				}        
+		}     
+		return $sr;
+	}
+	
+	function alterImageSrc($image, $attachment_id, $size, $icon)
+	{        
+			$upload_dir = wp_upload_dir();
+			$base_dir = $upload_dir['basedir'];
+			$base_url = $upload_dir['baseurl'];
+			$imagepath= str_replace($base_url, $base_dir, $image[0].'.webp');
+			if ( file_exists( $imagepath) ){
+				$image[0] = $image[0].'.webp';
+			}
+			return $image;
+	}
+	
+	function scan_post($post_id){
+		$post = get_post($post_id);
+		preg_match_all('/<img\s+[^>]*?>/i', $post -> post_content, $matches);
+		$img_tags = $matches[0];
+			foreach($img_tags as $img_tag){
+				if (preg_match('/src=["\']([^"\']+)/i', $img_tag, $src_match)) {
+					$image_url = $src_match[1];
+					$upload_dir = wp_upload_dir();
+					$base_dir = $upload_dir['basedir'];
+					$base_url = $upload_dir['baseurl'];
+					$imagepath= str_replace($base_url, $base_dir, $image_url.'.webp');
+					if(file_exists($imagepath)){
+						
+						$post -> post_content = str_replace($image_url, $image_url.'.webp',  $post -> post_content);
+					}
+				}
+			}
+		remove_action('publish_post', array($this, 'scan_post'));
+		wp_update_post($post);
+		return $post_id;
 	}
 	
 	function delete_webp_image($post_id)
@@ -70,18 +123,8 @@ class OptimizeImages {
 	}	
 }
 
-function alterImageSRC($image, $attachment_id, $size, $icon)
-{        
-		$upload_dir = wp_upload_dir();
-		$base_dir = $upload_dir['basedir'];
-		$base_url = $upload_dir['baseurl'];
-		$imagepath= str_replace($base_url, $base_dir, $image[0].'.webp');
-		if ( file_exists( $imagepath) ){
-			$image[0] = $image[0].'.webp';
-		}
-		return $image;
-}
-add_filter('wp_get_attachment_image_src', 'alterImageSRC', 10, 4);
+
+
 
 
 $class = new OptimizeImages();
