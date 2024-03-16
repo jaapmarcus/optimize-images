@@ -39,6 +39,9 @@ class OptimizeImages {
 			$upload_dir = wp_upload_dir();
 			$base_dir = $upload_dir['basedir'];
 			$base_url = $upload_dir['baseurl'];
+			if(is_bool($image)){
+				return $image;
+			}
 			$imagepath= str_replace($base_url, $base_dir, $image[0].'.webp');
 			if ( file_exists( $imagepath) ){
 				$image[0] = $image[0].'.webp';

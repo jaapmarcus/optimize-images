@@ -19,7 +19,7 @@ jobs:
       run: mkdir artifacts
       
     - name: Create zip file
-      run: zip -o artifacts/optimize-images -r optimize-images
+      run: zip -vr artifacts/optimize-images optimize-images
 
     - name: Upload artifacts for workflow
       uses: actions/upload-artifact@v3
