@@ -3,7 +3,7 @@
 Plugin Name:Optimize Images
 Plugin URI: https://eris.nu
 Description:
-Version: 1.2.0
+Version: 1.2.1
 Author: Jaap Marcus
 Author URI:  https://eris.nu
 Text Domain: -
